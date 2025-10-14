@@ -1,6 +1,6 @@
 Flask==3.0.2
 Flask-Cors==4.0.0
-tensorflow==2.20
+tensorflow-cpu==2.20
 opencv-python-headless==4.8.1.78
 deepface==0.0.91
 mtcnn==0.1.1
