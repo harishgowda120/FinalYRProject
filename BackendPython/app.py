@@ -4,6 +4,8 @@ from deepface import DeepFace
 import cv2
 import numpy as np
 import time
+import os
+os.environ['TF_USE_LEGACY_KERAS'] = '0' 
 
 app = Flask(__name__)
 CORS(app)
@@ -60,3 +62,4 @@ def detect_emotion():
 if __name__ == '__main__':
     print("Flask server running on http://127.0.0.1:8000")
     app.run(debug=False, port=8000, use_reloader=False)
+
