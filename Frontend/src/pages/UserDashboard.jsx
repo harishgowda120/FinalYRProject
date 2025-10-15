@@ -7,7 +7,7 @@ export default function UserDashboard() {
   const [emotions, setEmotions] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const BACKEND_URL = "http://localhost:5000/api/users/emotions";
+  const BACKEND_URL = "https://finalyrproject-2.onrender.com/api/users/emotions";
 
   // Emotion emoji mapping
   const emotionEmojis = {
@@ -470,4 +470,5 @@ export default function UserDashboard() {
       </div>
     </div>
   );
+
 }
