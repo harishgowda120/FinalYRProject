@@ -1,100 +1,102 @@
-import { Link, useLocation } from 'react-router-dom';
-import { useState } from 'react';
-import { useAuth } from '../context/AuthContext'; // ⬅️ import auth context
-import img from './image.png';
+// Sidebar.jsx
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import img from "./image.png";
 
 export default function Sidebar() {
-  const [show, setShow] = useState(false);
-
   return (
     <>
-      {/* Offcanvas Toggle for small screens */}
-      <button
-        className="btn btn-outline-primary d-md-none m-5"
-        type="button"
-        onClick={() => setShow(true)}
-      >
-        ☰ Menu
-      </button>
-
-      {/* Fixed Sidebar for medium and larger screens */}
-      <div
+      {/* Fixed Sidebar visible only on md and larger screens */}
+      <aside
         className="sidebar d-none d-md-block bg-light border-end p-3"
-        style={{
-          marginTop: '30px',
-          marginBottom: '30px',
-          width: '340px',
-          minHeight: '80vh',
-          background: 'linear-gradient(180deg, #fbc2eb 0%, #a18cd1 100%)',
-          boxShadow: '2px 0 12px rgba(161,140,209,0.10)',
-          borderRadius: '20px',
-        }}
+        aria-label="Primary"
       >
-        <h5 className="mb-4 fw-bold" style={{ color: "#a18cd1", letterSpacing: "2px" }}>
-          <span
-            style={{
-              borderRadius: "50%",
-              padding: "6px 14px",
-              marginRight: "10px",
-              fontSize: "1.3rem",
-            }}
-          >
-          <img  src={img} alt="Logo" style={{ height: "44px", width: "44px",borderRadius: "50%"}} />
+        <h5 className="mb-4 fw-bold sidebar-title">
+          <span className="sidebar-logo">
+            <img src={img} alt="Logo" className="sidebar-logo-img" />
           </span>
           Menu
         </h5>
-        <SidebarLinks />
-      </div>
 
-      {/* Offcanvas for smaller screens */}
-      <div
-        className={`offcanvas offcanvas-start ${show ? 'show' : ''}`}
-        tabIndex="-1"
-        style={{ visibility: show ? 'visible' : 'hidden' }}
-      >
-        <div className="offcanvas-header">
-          <h5 className="offcanvas-title">Menu</h5>
-          <button type="button" className="btn-close" onClick={() => setShow(false)}></button>
-        </div>
-        <div className="offcanvas-body">
-          <SidebarLinks onLinkClick={() => setShow(false)} />
-        </div>
-      </div>
-      {/* Inline CSS for hover and active effect */}
-      <style>
-        {`
-          .sidebar .nav-link {
-            color: #6c3483;
-            font-weight: 500;
-            font-size: 1.08rem;
-            border-radius: 12px;
-            margin-bottom: 8px;
-            padding: 10px 18px;
-            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+        <SidebarLinks />
+      </aside>
+
+      {/* Inline CSS */}
+      <style>{`
+        /* ---------- Sidebar (desktop only) ---------- */
+        .sidebar {
+          margin-top: 30px;
+          margin-bottom: 30px;
+          width: 340px;
+          min-height: 80vh;
+          background: linear-gradient(180deg, #fbc2eb 0%, #a18cd1 100%);
+          box-shadow: 2px 0 12px rgba(161,140,209,0.10);
+          border-radius: 20px;
+        }
+
+        .sidebar-title {
+          color: #a18cd1;
+          letter-spacing: 2px;
+        }
+
+        .sidebar-logo {
+          display: inline-block;
+          border-radius: 50%;
+          padding: 6px 14px;
+          margin-right: 10px;
+          font-size: 1.3rem;
+          vertical-align: middle;
+        }
+
+        .sidebar-logo-img {
+          height: 44px;
+          width: 44px;
+          border-radius: 50%;
+          object-fit: cover;
+        }
+
+        /* Sidebar link styles */
+        .sidebar .nav-link {
+          color: #6c3483;
+          font-weight: 500;
+          font-size: 1.08rem;
+          border-radius: 12px;
+          margin-bottom: 8px;
+          padding: 10px 18px;
+          transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.12s;
+        }
+
+        .sidebar .nav-link:hover {
+          background: rgba(255,255,255,0.25);
+          color: #fff !important;
+          box-shadow: 0 2px 8px rgba(161,140,209,0.10);
+          transform: translateY(-1px);
+        }
+
+        .sidebar .active-nav {
+          background: #fff !important;
+          color: #a18cd1 !important;
+          font-weight: bold;
+          box-shadow: 0 2px 8px rgba(161,140,209,0.10);
+        }
+
+        /* Hide sidebar completely on small screens */
+        @media (max-width: 767.98px) {
+          .sidebar {
+            display: none !important;
           }
-          .sidebar .nav-link:hover {
-            background: rgba(255,255,255,0.25);
-            color: #fff !important;
-            box-shadow: 0 2px 8px rgba(161,140,209,0.10);
-          }
-          .sidebar .active-nav {
-            background: #fff !important;
-            color: #a18cd1 !important;
-            font-weight: bold;
-            box-shadow: 0 2px 8px rgba(161,140,209,0.10);
-          }
-        `}
-      </style>
+        }
+      `}</style>
     </>
   );
 }
 
-// Separate reusable component for links
-function SidebarLinks({ onLinkClick }) {
+/* ---------- SidebarLinks component ---------- */
+function SidebarLinks() {
   const { loggedIn } = useAuth();
   const location = useLocation();
 
-  // Helper to check if a route is active
   const isActive = (path) => location.pathname === path;
 
   return (
@@ -105,43 +107,42 @@ function SidebarLinks({ onLinkClick }) {
             <Link
               className={`nav-link ${isActive("/dashboard") ? "active-nav" : ""}`}
               to="/dashboard"
-              onClick={onLinkClick}
             >
               Dashboard
             </Link>
           </li>
+
           <li className="nav-item">
             <Link
               className={`nav-link ${isActive("/profile") ? "active-nav" : ""}`}
               to="/profile"
-              onClick={onLinkClick}
             >
               Profile
             </Link>
           </li>
+
           <li className="nav-item">
             <Link
               className={`nav-link ${isActive("/planner") ? "active-nav" : ""}`}
               to="/planner"
-              onClick={onLinkClick}
             >
               Day Planner
             </Link>
           </li>
+
           <li className="nav-item">
             <Link
               className={`nav-link ${isActive("/emotion") ? "active-nav" : ""}`}
               to="/emotion"
-              onClick={onLinkClick}
             >
               Emotion Detector
             </Link>
           </li>
+
           <li className="nav-item">
             <Link
               className={`nav-link ${isActive("/about") ? "active-nav" : ""}`}
               to="/about"
-              onClick={onLinkClick}
             >
               About
             </Link>
@@ -153,16 +154,15 @@ function SidebarLinks({ onLinkClick }) {
             <Link
               className={`nav-link ${isActive("/") ? "active-nav" : ""}`}
               to="/"
-              onClick={onLinkClick}
             >
               Home
             </Link>
           </li>
+
           <li className="nav-item">
             <Link
               className={`nav-link ${isActive("/about") ? "active-nav" : ""}`}
               to="/about"
-              onClick={onLinkClick}
             >
               About
             </Link>
