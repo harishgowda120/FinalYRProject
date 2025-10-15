@@ -12,7 +12,7 @@ export default function EmotionDetector() {
   const [lastEmotionId, setLastEmotionId] = useState(null); // track last added emotion for updates
 
   const FLASK_BACKEND_URL = "http://127.0.0.1:8000/detect_emotion"; 
-  const NODE_BACKEND_URL = "http://localhost:5000/api/users/emotions"; // Node API routes
+  const NODE_BACKEND_URL = "https://finalyrproject-2.onrender.com/api/users/emotions"; // Node API routes
 
   // ✅ Get logged-in user globally (adjust based on your global state management)
   const user = JSON.parse(localStorage.getItem("user"));
@@ -213,3 +213,4 @@ export default function EmotionDetector() {
     </div>
   );
 }
+
