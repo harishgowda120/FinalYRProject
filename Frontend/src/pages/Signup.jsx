@@ -73,7 +73,7 @@ export default function Signup() {
     }
 
     try {
-      const res = await axios.post("http://localhost:5000/api/users/signup", formData);
+      const res = await axios.post("https://finalyrproject-2.onrender.com/api/users/signup", formData);
       console.log("✅ Signup Success:", res.data);
       setMessage("✅ Signup successful! Redirecting to login...");
 
@@ -330,4 +330,5 @@ export default function Signup() {
       </div>
     </div>
   );
+
 }
