@@ -16,7 +16,7 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const res = await axios.post("http://localhost:5000/api/users/login", {
+      const res = await axios.post("https://finalyrproject-2.onrender.com/api/users/login", {
         email,
         password,
       });
@@ -139,3 +139,4 @@ export default function Login() {
     </div>
   );
 }
+
