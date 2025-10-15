@@ -15,6 +15,8 @@ export default function DayPlanner() {
   const parsePlan = (text) => {
     const lines = text.split("\n").filter((l) => l.trim() !== "");
     let currentSection = "";
+    console.log("Section:", currentSection);
+
 
     return lines.map((line, index) => {
       // Section headers
@@ -412,3 +414,4 @@ export default function DayPlanner() {
     </div>
   );
 }
+
