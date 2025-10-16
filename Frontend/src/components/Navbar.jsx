@@ -9,6 +9,7 @@ export default function Navbar() {
   const location = useLocation();
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
+  const [isCollapsed, setIsCollapsed] = useState(true); // tracks collapse state
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 992);
@@ -19,6 +20,14 @@ export default function Navbar() {
   const handleLogout = () => {
     logoutUser();
     navigate("/login");
+  };
+
+  const handleNavItemClick = () => {
+    if (isMobile) setIsCollapsed(true); // collapse navbar after clicking a link
+  };
+
+  const toggleNavbar = () => {
+    setIsCollapsed(!isCollapsed);
   };
 
   const isActive = (path) => location.pathname === path;
@@ -37,6 +46,7 @@ export default function Navbar() {
       <Link
         className="navbar-brand d-flex align-items-center"
         to="/"
+        onClick={handleNavItemClick}
         style={{
           fontWeight: "bold",
           fontSize: "2rem",
@@ -64,17 +74,19 @@ export default function Navbar() {
       <button
         className="navbar-toggler"
         type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#navbarNav"
         aria-controls="navbarNav"
-        aria-expanded="false"
+        aria-expanded={!isCollapsed}
         aria-label="Toggle navigation"
         style={{ border: "none" }}
+        onClick={toggleNavbar}
       >
         <span className="navbar-toggler-icon"></span>
       </button>
 
-      <div className="collapse navbar-collapse" id="navbarNav">
+      <div
+        className={`collapse navbar-collapse ${isCollapsed ? "" : "show"}`}
+        id="navbarNav"
+      >
         <ul className="navbar-nav ms-auto align-items-center">
           {loggedIn ? (
             <>
@@ -99,6 +111,7 @@ export default function Navbar() {
                     <Link
                       className={`nav-link ${isActive("/dashboard") ? "active-nav" : ""}`}
                       to="/dashboard"
+                      onClick={handleNavItemClick}
                     >
                       Dashboard
                     </Link>
@@ -108,6 +121,7 @@ export default function Navbar() {
                     <Link
                       className={`nav-link ${isActive("/profile") ? "active-nav" : ""}`}
                       to="/profile"
+                      onClick={handleNavItemClick}
                     >
                       Profile
                     </Link>
@@ -117,6 +131,7 @@ export default function Navbar() {
                     <Link
                       className={`nav-link ${isActive("/planner") ? "active-nav" : ""}`}
                       to="/planner"
+                      onClick={handleNavItemClick}
                     >
                       Day Planner
                     </Link>
@@ -126,6 +141,7 @@ export default function Navbar() {
                     <Link
                       className={`nav-link ${isActive("/emotion") ? "active-nav" : ""}`}
                       to="/emotion"
+                      onClick={handleNavItemClick}
                     >
                       Emotion Detector
                     </Link>
@@ -138,6 +154,7 @@ export default function Navbar() {
                 <Link
                   className={`nav-link ${isActive("/about") ? "active-nav" : ""}`}
                   to="/about"
+                  onClick={handleNavItemClick}
                 >
                   About
                 </Link>
@@ -153,7 +170,10 @@ export default function Navbar() {
                     color: "#a18cd1",
                     boxShadow: "0 2px 6px rgba(161,140,209,0.10)",
                   }}
-                  onClick={handleLogout}
+                  onClick={() => {
+                    handleLogout();
+                    handleNavItemClick();
+                  }}
                 >
                   Logout
                 </button>
@@ -166,6 +186,7 @@ export default function Navbar() {
                 <Link
                   className={`nav-link ${isActive("/login") ? "active-nav" : ""}`}
                   to="/login"
+                  onClick={handleNavItemClick}
                 >
                   Login
                 </Link>
@@ -175,6 +196,7 @@ export default function Navbar() {
                 <Link
                   className={`nav-link ${isActive("/signup") ? "active-nav" : ""}`}
                   to="/signup"
+                  onClick={handleNavItemClick}
                 >
                   Signup
                 </Link>
@@ -185,6 +207,7 @@ export default function Navbar() {
                 <Link
                   className={`nav-link ${isActive("/about") ? "active-nav" : ""}`}
                   to="/about"
+                  onClick={handleNavItemClick}
                 >
                   About
                 </Link>
