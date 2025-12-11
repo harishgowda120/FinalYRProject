@@ -6,18 +6,19 @@ export default function EmotionDetector() {
   const canvasRef = useRef(null);
   const [capturedImage, setCapturedImage] = useState(null);
   const [emotionResult, setEmotionResult] = useState('');
+  const [probabilities, setProbabilities] = useState(null);
   const [loading, setLoading] = useState(false);
   const [manualEmotion, setManualEmotion] = useState('');
   const [isOverride, setIsOverride] = useState(false);
-  const [lastEmotionId, setLastEmotionId] = useState(null); // track last added emotion for updates
+  const [lastEmotionId, setLastEmotionId] = useState(null);
 
-  const FLASK_BACKEND_URL = "http://127.0.0.1:8000/detect_emotion"; 
-  const NODE_BACKEND_URL = "https://finalyrproject-2.onrender.com/api/users/emotions"; // Node API routes
+  // 🔥 Updated Flask URL
+  const FLASK_BACKEND_URL = "https://finalpybackend-2.onrender.com/detect_emotion";
 
-  // ✅ Get logged-in user globally (adjust based on your global state management)
+  const NODE_BACKEND_URL = "http://localhost:5000/api/users/emotions";
+
   const user = JSON.parse(localStorage.getItem("user"));
 
-  // Start webcam
   const startCamera = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
     if (videoRef.current) {
@@ -25,7 +26,6 @@ export default function EmotionDetector() {
     }
   };
 
-  // Capture frame from video and send to backend
   const captureImage = async () => {
     const context = canvasRef.current.getContext('2d');
     context.drawImage(videoRef.current, 0, 0, 320, 240);
@@ -38,7 +38,6 @@ export default function EmotionDetector() {
     await sendToFlask(file);
   };
 
-  // Upload image from file input
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -52,10 +51,10 @@ export default function EmotionDetector() {
     await sendToFlask(file);
   };
 
-  // Send image to Flask for emotion detection
   const sendToFlask = async (file) => {
     setLoading(true);
     setEmotionResult("");
+    setProbabilities(null);
     setIsOverride(false);
 
     try {
@@ -68,9 +67,17 @@ export default function EmotionDetector() {
       });
 
       const data = await response.json();
+      console.log("FLASK RESPONSE:", data);
+
       if (response.ok) {
         const detectedEmotion = data.emotion;
-        setEmotionResult(`😃 Detected Emotion: ${detectedEmotion} — ${data.explanation}`);
+
+        setEmotionResult(
+          `😃 Detected Emotion: ${detectedEmotion} — ${data.explanation}`
+        );
+
+        // Save probability list
+        setProbabilities(data.probabilities);
 
         // ➕ Save detected emotion to Node backend
         if (user?._id) {
@@ -80,14 +87,14 @@ export default function EmotionDetector() {
             body: JSON.stringify({
               userId: user._id,
               emotion: detectedEmotion,
-              confidence: data.confidence || 1.0,
+              confidence: 1.0,
             }),
           });
 
           const saveData = await saveRes.json();
           if (saveRes.ok) {
             const last = saveData.emotions[saveData.emotions.length - 1];
-            setLastEmotionId(last._id); // save ID for future update
+            setLastEmotionId(last._id);
           }
         }
       } else {
@@ -100,16 +107,14 @@ export default function EmotionDetector() {
     setLoading(false);
   };
 
-  // Handle manual override
   const handleOverride = async () => {
     if (!manualEmotion.trim()) return;
     setEmotionResult(`✏️ User Updated Emotion: ${manualEmotion}`);
     setIsOverride(true);
 
-    // ✏️ Update emotion in Node backend
     if (user?._id && lastEmotionId) {
       try {
-        const updateRes = await fetch(`${NODE_BACKEND_URL}/update`, {
+        await fetch(`${NODE_BACKEND_URL}/update`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -119,8 +124,6 @@ export default function EmotionDetector() {
             newConfidence: 1.0,
           }),
         });
-
-        await updateRes.json(); // (you can log this if needed)
       } catch (error) {
         console.error("Failed to update emotion:", error);
       }
@@ -134,11 +137,11 @@ export default function EmotionDetector() {
         <div className="container">
           <h2 className="mb-4">🎭 Emotion Detector</h2>
           <p className="text-muted">
-            📌 Click "Capture" for a clear image or upload a photo. If the detected emotion doesn’t match your real feeling, you can update it manually.
+            📌 Capture or upload a photo to analyze your emotion. Update manually if incorrect.
           </p>
 
           <div className="row">
-            {/* Camera Section */}
+            {/* Camera */}
             <div className="col-md-6 mb-4">
               <div className="card shadow-sm">
                 <div className="card-body">
@@ -153,7 +156,7 @@ export default function EmotionDetector() {
               </div>
             </div>
 
-            {/* Upload Section */}
+            {/* Upload */}
             <div className="col-md-6 mb-4">
               <div className="card shadow-sm">
                 <div className="card-body">
@@ -169,16 +172,30 @@ export default function EmotionDetector() {
             <div className="card mt-4 shadow-sm">
               <div className="card-body">
                 <h5 className="card-title">🧠 Emotion Result</h5>
-                <img src={capturedImage} alt="Captured" className="img-thumbnail mb-3" style={{ maxWidth: '320px' }} />
-                
-                <p className="fs-5">
-                  {loading ? "⏳ Detecting emotion..." : emotionResult}
-                </p>
 
-                {/* Manual Override Section */}
+                <img src={capturedImage} alt="Captured" className="img-thumbnail mb-3" style={{ maxWidth: '320px' }} />
+
+                <p className="fs-5">{loading ? "⏳ Detecting emotion..." : emotionResult}</p>
+
+                {/* 🔥 Probability Table */}
+                {probabilities && (
+                  <div className="mt-3">
+                    <h6 className="fw-bold">📊 Emotion Probabilities</h6>
+                    <ul className="list-group">
+                      {Object.entries(probabilities).map(([emo, val]) => (
+                        <li key={emo} className="list-group-item d-flex justify-content-between">
+                          <strong>{emo}</strong>
+                          <span>{val.toFixed(2)}%</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Manual Override */}
                 {!loading && emotionResult && (
                   <div className="mt-3">
-                    <label className="form-label fw-bold">🙋 Not correct? Update your emotion:</label>
+                    <label className="form-label fw-bold">🙋 Not correct? Update emotion:</label>
                     <div className="d-flex gap-2">
                       <input
                         type="text"
@@ -187,30 +204,16 @@ export default function EmotionDetector() {
                         value={manualEmotion}
                         onChange={(e) => setManualEmotion(e.target.value)}
                       />
-                      <button className="btn btn-warning" onClick={handleOverride}>
-                        Update
-                      </button>
+                      <button className="btn btn-warning" onClick={handleOverride}>Update</button>
                     </div>
-                    {isOverride && (
-                      <p className="text-success mt-2">✔️ Your update has been recorded.</p>
-                    )}
+                    {isOverride && <p className="text-success mt-2">✔️ Emotion updated.</p>}
                   </div>
                 )}
               </div>
             </div>
           )}
-
-          <div className="mt-5">
-            <h4>ℹ️ How it works</h4>
-            <p>
-              This tool allows you to either capture your photo from the webcam or upload one from your device.
-              The backend analyzes the facial expressions using AI (DeepFace in Flask) and returns the detected emotion.
-              If the prediction is incorrect, you can override it with your actual feeling. Your data is then stored securely in the database.
-            </p>
-          </div>
         </div>
       </div>
     </div>
   );
 }
-
