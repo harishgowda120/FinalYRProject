@@ -15,7 +15,7 @@ export default function EmotionDetector() {
   // 🔥 Updated Flask URL
   const FLASK_BACKEND_URL = "https://finalpybackend-2.onrender.com/detect_emotion";
 
-  const NODE_BACKEND_URL = "http://localhost:5000/api/users/emotions";
+  const NODE_BACKEND_URL = "https://finalyrproject-2.onrender.com/api/users/emotions";
 
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -217,3 +217,4 @@ export default function EmotionDetector() {
     </div>
   );
 }
+
