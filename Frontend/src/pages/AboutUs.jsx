@@ -74,7 +74,8 @@ export default function AboutUs() {
               👨‍💻
             </span>
             <span className="fw-bold" style={{ color: "#6c3483", fontSize: "1.2rem" }}>
-              Harish Gowda N
+              {/* Harish Gowda N */}
+              🌔
             </span>
           </div>
           <p style={{ color: "#6c3483" }}>
@@ -145,4 +146,5 @@ export default function AboutUs() {
       </div>
     </div>
   );
+
 }
