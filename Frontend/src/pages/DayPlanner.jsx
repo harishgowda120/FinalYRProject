@@ -624,9 +624,9 @@ Now create a plan specifically for ${latestEmotion} emotion starting from ${next
                 <h2
                   className="fw-bold mb-2"
                   style={{
-                    background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
+                    // background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
+                    // WebkitBackgroundClip: "text",
+                    // WebkitTextFillColor: "transparent",
                     fontSize: "1.8rem",
                   }}
                 >
@@ -1159,3 +1159,4 @@ Now create a plan specifically for ${latestEmotion} emotion starting from ${next
     </div>
   );
 }
+
