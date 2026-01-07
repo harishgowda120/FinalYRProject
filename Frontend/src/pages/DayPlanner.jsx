@@ -19,7 +19,7 @@ export default function DayPlanner() {
   const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`;
 
   // Get current IST time in 12-hour format
-  const getCurrentISTTime = () => {
+  const getCurrentISTTime = useCallback(() => {
     const now = new Date();
     const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
     const istTime = new Date(utcTime + (5.5 * 60 * 60000));
@@ -31,10 +31,10 @@ export default function DayPlanner() {
     hours = hours ? hours : 12;
     
     return `${hours}:${minutes} ${ampm}`;
-  };
+  }, []);
 
   // Calculate next 30-minute interval from current time
-  const getNextTimeSlot = () => {
+  const getNextTimeSlot = useCallback(() => {
     const now = new Date();
     const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
     const istTime = new Date(utcTime + (5.5 * 60 * 60000));
@@ -56,13 +56,143 @@ export default function DayPlanner() {
     const ampm = hours >= 12 ? 'PM' : 'AM';
     
     return `${formattedHours}:${formattedMinutes} ${ampm}`;
-  };
+  }, []);
 
   // Create YouTube search URL for a song
-  const getYouTubeUrl = (songTitle, artist) => {
+  const getYouTubeUrl = useCallback((songTitle, artist) => {
     const searchQuery = `${songTitle} ${artist} Kannada song`.replace(/\s+/g, '+');
     return `https://www.youtube.com/results?search_query=${searchQuery}`;
-  };
+  }, []);
+
+  // Get default Kannada songs based on emotion
+  const getDefaultKannadaSongs = useCallback((currentEmotion) => {
+    const emotionSongs = {
+      joy: [
+        { title: "Baare Baare", artist: "S. P. Balasubrahmanyam", youtubeUrl: getYouTubeUrl("Baare Baare", "S. P. Balasubrahmanyam") },
+        { title: "Jogada Siri Belakinalli", artist: "P. Kalinga Rao", youtubeUrl: getYouTubeUrl("Jogada Siri Belakinalli", "P. Kalinga Rao") },
+        { title: "Huttidare Kannada", artist: "C. Ashwath", youtubeUrl: getYouTubeUrl("Huttidare Kannada", "C. Ashwath") },
+        { title: "Kanasugala", artist: "Ravindra Soragavi", youtubeUrl: getYouTubeUrl("Kanasugala", "Ravindra Soragavi") }
+      ],
+      sad: [
+        { title: "Kanne Kanne", artist: "From movie 'Kavacha'", youtubeUrl: getYouTubeUrl("Kanne Kanne", "Kavacha movie") },
+        { title: "Belaku Idu", artist: "From movie 'Geetha'", youtubeUrl: getYouTubeUrl("Belaku Idu", "Geetha movie") },
+        { title: "Male Nintu", artist: "Rajkumar", youtubeUrl: getYouTubeUrl("Male Nintu", "Rajkumar") },
+        { title: "Naguva Nayana", artist: "S. P. Balasubrahmanyam", youtubeUrl: getYouTubeUrl("Naguva Nayana", "S. P. Balasubrahmanyam") }
+      ],
+      calm: [
+        { title: "Male Nintu", artist: "Rajkumar", youtubeUrl: getYouTubeUrl("Male Nintu", "Rajkumar") },
+        { title: "Kanasugala", artist: "Ravindra Soragavi", youtubeUrl: getYouTubeUrl("Kanasugala", "Ravindra Soragavi") },
+        { title: "Onde Ondu Saari", artist: "C. Ashwath", youtubeUrl: getYouTubeUrl("Onde Ondu Saari", "C. Ashwath") },
+        { title: "Bhaavageethe", artist: "Various Artists", youtubeUrl: getYouTubeUrl("Kannada Bhaavageethe", "Various Artists") }
+      ],
+      neutral: [
+        { title: "Huttidare Kannada", artist: "C. Ashwath", youtubeUrl: getYouTubeUrl("Huttidare Kannada", "C. Ashwath") },
+        { title: "Baare Baare", artist: "S. P. Balasubrahmanyam", youtubeUrl: getYouTubeUrl("Baare Baare", "S. P. Balasubrahmanyam") },
+        { title: "Jogada Siri Belakinalli", artist: "P. Kalinga Rao", youtubeUrl: getYouTubeUrl("Jogada Siri Belakinalli", "P. Kalinga Rao") },
+        { title: "Kanasugala", artist: "Ravindra Soragavi", youtubeUrl: getYouTubeUrl("Kanasugala", "Ravindra Soragavi") }
+      ],
+      fear: [
+        { title: "Shanti Nilaya", artist: "Various Artists", youtubeUrl: getYouTubeUrl("Shanti Nilaya Kannada", "Various Artists") },
+        { title: "Om Sahana Vavatu", artist: "Traditional", youtubeUrl: getYouTubeUrl("Om Sahana Vavatu Kannada", "Traditional") },
+        { title: "Gayatri Mantra", artist: "Various Artists", youtubeUrl: getYouTubeUrl("Gayatri Mantra Kannada", "Various Artists") },
+        { title: "Male Nintu", artist: "Rajkumar", youtubeUrl: getYouTubeUrl("Male Nintu", "Rajkumar") }
+      ],
+      anxious: [
+        { title: "Om Sahana Vavatu", artist: "Traditional", youtubeUrl: getYouTubeUrl("Om Sahana Vavatu Kannada", "Traditional") },
+        { title: "Shanti Mantra", artist: "Various Artists", youtubeUrl: getYouTubeUrl("Shanti Mantra Kannada", "Various Artists") },
+        { title: "Gayatri Mantra", artist: "Various Artists", youtubeUrl: getYouTubeUrl("Gayatri Mantra Kannada", "Various Artists") },
+        { title: "Male Nintu", artist: "Rajkumar", youtubeUrl: getYouTubeUrl("Male Nintu", "Rajkumar") }
+      ]
+    };
+    
+    return emotionSongs[currentEmotion.toLowerCase()] || emotionSongs.neutral;
+  }, [getYouTubeUrl]);
+
+  // Helper function to check if time slot should be included
+  const shouldIncludeTimeSlot = useCallback((timeString) => {
+    const currentIST = getCurrentISTTime();
+    
+    const extractTime = (str) => {
+      const match = str.match(/(\d{1,2}):(\d{2})\s?([APap][Mm])?/);
+      if (!match) return { hour: 0, minute: 0, ampm: 'AM' };
+      
+      let hour = parseInt(match[1]);
+      const minute = parseInt(match[2]);
+      const ampm = match[3] ? match[3].toUpperCase() : 'AM';
+      
+      if (ampm === 'PM' && hour !== 12) hour += 12;
+      if (ampm === 'AM' && hour === 12) hour = 0;
+      
+      return { hour, minute, ampm };
+    };
+    
+    const slotTime = extractTime(timeString);
+    const currentTime = extractTime(currentIST);
+    
+    const slotMinutes = slotTime.hour * 60 + slotTime.minute;
+    const currentMinutes = currentTime.hour * 60 + currentTime.minute;
+    
+    return slotMinutes >= currentMinutes;
+  }, [getCurrentISTTime]);
+
+  // Create default time slots starting from given time
+  const createDefaultTimeSlots = useCallback((startTime) => {
+    const slots = [];
+    let currentTime = startTime;
+    
+    const activities = [
+      { activity: "Plan Your Day", type: "work", desc: "Review your tasks and set priorities" },
+      { activity: "Deep Work Session", type: "work", desc: "Focus on important tasks without distractions" },
+      { activity: "Short Break", type: "break", desc: "Stretch and hydrate" },
+      { activity: "Creative Work", type: "work", desc: "Work on creative projects or learning" },
+      { activity: "Lunch Break", type: "food", desc: "Enjoy a nutritious meal away from work" },
+      { activity: "Afternoon Tasks", type: "work", desc: "Handle emails and administrative work" },
+      { activity: "Evening Walk", type: "exercise", desc: "Get some fresh air and light exercise" },
+      { activity: "Dinner", type: "food", desc: "Light, healthy dinner" },
+      { activity: "Relaxation Time", type: "break", desc: "Read, meditate, or enjoy a hobby" },
+      { activity: "Wind Down", type: "rest", desc: "Prepare for restful sleep" }
+    ];
+    
+    const incrementTime = (timeStr) => {
+      const match = timeStr.match(/(\d{1,2}):(\d{2})\s?([APap][Mm])/);
+      if (!match) return timeStr;
+      
+      let hour = parseInt(match[1]);
+      let minute = parseInt(match[2]);
+      let ampm = match[3].toUpperCase();
+      
+      minute += 30;
+      if (minute >= 60) {
+        hour += Math.floor(minute / 60);
+        minute = minute % 60;
+      }
+      
+      if (hour >= 12) {
+        if (hour > 12) hour -= 12;
+        if (ampm === 'AM' && hour === 12) ampm = 'PM';
+        else if (ampm === 'PM' && hour === 12) ampm = 'AM';
+      }
+      
+      const formattedMinute = minute.toString().padStart(2, '0');
+      return `${hour}:${formattedMinute} ${ampm}`;
+    };
+    
+    for (let i = 0; i < Math.min(8, activities.length); i++) {
+      const endTime = incrementTime(currentTime);
+      const timeRange = `${currentTime} - ${endTime}`;
+      
+      slots.push({
+        time: timeRange,
+        mainActivity: activities[i].activity,
+        description: activities[i].desc,
+        type: activities[i].type
+      });
+      
+      currentTime = incrementTime(endTime);
+    }
+    
+    return slots;
+  }, []);
 
   // Parse plan response
   const parsePlanResponse = useCallback((text) => {
@@ -82,8 +212,8 @@ export default function DayPlanner() {
     
     // Extract focus
     let focus = "Balanced daily activities";
-    const focusMatch = text.match(/Focus[:\-]?\s*(.+?)(?=\n|$)/i) || 
-                      text.match(/Today['']?s Focus[:\-]?\s*(.+?)(?=\n|$)/i);
+    const focusMatch = text.match(/Focus[:\\-]?\s*(.+?)(?=\n|$)/i) || 
+                      text.match(/Today['']?s Focus[:\\-]?\s*(.+?)(?=\n|$)/i);
     if (focusMatch && focusMatch[1]) {
       focus = focusMatch[1].trim();
     }
@@ -151,7 +281,7 @@ export default function DayPlanner() {
       line = line.trim();
       if (!line) return;
       
-      // Match time slots
+      // Match time slots - FIXED regex escape characters
       const timeRegex = /(\d{1,2}:\d{2}\s?[APap][Mm]?\s?[-–]\s?\d{1,2}:\d{2}\s?[APap][Mm]?|\d{1,2}:\d{2}\s?[APap][Mm]?)(?:\s*[:-]|\s+)(.+)/i;
       const match = line.match(timeRegex);
       
@@ -159,8 +289,8 @@ export default function DayPlanner() {
         const time = match[1].trim();
         let activity = match[2].trim();
         
-        // Clean activity text
-        activity = activity.replace(/^\s*[\[\]\(\)]\s*/, '').replace(/\s*[\[\]\(\)]\s*$/, '');
+        // Clean activity text - FIXED escape characters
+        activity = activity.replace(/^\s*(\[|\]|\(|\))\s*/, '').replace(/\s*(\[|\]|\(|\))\s*$/, '');
         activity = activity.replace(/\*\*/g, '').trim();
         
         if (shouldIncludeTimeSlot(time)) {
@@ -215,137 +345,50 @@ export default function DayPlanner() {
       const filteredSlots = slots.filter(slot => shouldIncludeTimeSlot(slot.time));
       setTimeSlots(filteredSlots.length > 0 ? filteredSlots : slots.slice(0, 5));
     }
-  }, [emotion]);
+  }, [emotion, getDefaultKannadaSongs, getYouTubeUrl, shouldIncludeTimeSlot, createDefaultTimeSlots, getNextTimeSlot]);
 
-  // Get default Kannada songs based on emotion
-  const getDefaultKannadaSongs = (currentEmotion) => {
-    const emotionSongs = {
-      joy: [
-        { title: "Baare Baare", artist: "S. P. Balasubrahmanyam", youtubeUrl: getYouTubeUrl("Baare Baare", "S. P. Balasubrahmanyam") },
-        { title: "Jogada Siri Belakinalli", artist: "P. Kalinga Rao", youtubeUrl: getYouTubeUrl("Jogada Siri Belakinalli", "P. Kalinga Rao") },
-        { title: "Huttidare Kannada", artist: "C. Ashwath", youtubeUrl: getYouTubeUrl("Huttidare Kannada", "C. Ashwath") },
-        { title: "Kanasugala", artist: "Ravindra Soragavi", youtubeUrl: getYouTubeUrl("Kanasugala", "Ravindra Soragavi") }
-      ],
-      sad: [
-        { title: "Kanne Kanne", artist: "From movie 'Kavacha'", youtubeUrl: getYouTubeUrl("Kanne Kanne", "Kavacha movie") },
-        { title: "Belaku Idu", artist: "From movie 'Geetha'", youtubeUrl: getYouTubeUrl("Belaku Idu", "Geetha movie") },
-        { title: "Male Nintu", artist: "Rajkumar", youtubeUrl: getYouTubeUrl("Male Nintu", "Rajkumar") },
-        { title: "Naguva Nayana", artist: "S. P. Balasubrahmanyam", youtubeUrl: getYouTubeUrl("Naguva Nayana", "S. P. Balasubrahmanyam") }
-      ],
-      calm: [
-        { title: "Male Nintu", artist: "Rajkumar", youtubeUrl: getYouTubeUrl("Male Nintu", "Rajkumar") },
-        { title: "Kanasugala", artist: "Ravindra Soragavi", youtubeUrl: getYouTubeUrl("Kanasugala", "Ravindra Soragavi") },
-        { title: "Onde Ondu Saari", artist: "C. Ashwath", youtubeUrl: getYouTubeUrl("Onde Ondu Saari", "C. Ashwath") },
-        { title: "Bhaavageethe", artist: "Various Artists", youtubeUrl: getYouTubeUrl("Kannada Bhaavageethe", "Various Artists") }
-      ],
-      neutral: [
-        { title: "Huttidare Kannada", artist: "C. Ashwath", youtubeUrl: getYouTubeUrl("Huttidare Kannada", "C. Ashwath") },
-        { title: "Baare Baare", artist: "S. P. Balasubrahmanyam", youtubeUrl: getYouTubeUrl("Baare Baare", "S. P. Balasubrahmanyam") },
-        { title: "Jogada Siri Belakinalli", artist: "P. Kalinga Rao", youtubeUrl: getYouTubeUrl("Jogada Siri Belakinalli", "P. Kalinga Rao") },
-        { title: "Kanasugala", artist: "Ravindra Soragavi", youtubeUrl: getYouTubeUrl("Kanasugala", "Ravindra Soragavi") }
-      ],
-      fear: [
-        { title: "Shanti Nilaya", artist: "Various Artists", youtubeUrl: getYouTubeUrl("Shanti Nilaya Kannada", "Various Artists") },
-        { title: "Om Sahana Vavatu", artist: "Traditional", youtubeUrl: getYouTubeUrl("Om Sahana Vavatu Kannada", "Traditional") },
-        { title: "Gayatri Mantra", artist: "Various Artists", youtubeUrl: getYouTubeUrl("Gayatri Mantra Kannada", "Various Artists") },
-        { title: "Male Nintu", artist: "Rajkumar", youtubeUrl: getYouTubeUrl("Male Nintu", "Rajkumar") }
-      ],
-      anxious: [
-        { title: "Om Sahana Vavatu", artist: "Traditional", youtubeUrl: getYouTubeUrl("Om Sahana Vavatu Kannada", "Traditional") },
-        { title: "Shanti Mantra", artist: "Various Artists", youtubeUrl: getYouTubeUrl("Shanti Mantra Kannada", "Various Artists") },
-        { title: "Gayatri Mantra", artist: "Various Artists", youtubeUrl: getYouTubeUrl("Gayatri Mantra Kannada", "Various Artists") },
-        { title: "Male Nintu", artist: "Rajkumar", youtubeUrl: getYouTubeUrl("Male Nintu", "Rajkumar") }
-      ]
+  // Create fallback plan
+  const createFallbackPlan = useCallback((emotionParam, startTime) => {
+    const emotionTitles = {
+      joy: "Joyful Day Plan",
+      sad: "Comforting Day Plan",
+      calm: "Peaceful Day Plan",
+      neutral: "Balanced Day Plan",
+      fear: "Grounding Day Plan",
+      anxious: "Calming Day Plan"
     };
     
-    return emotionSongs[currentEmotion.toLowerCase()] || emotionSongs.neutral;
-  };
-
-  // Helper function to check if time slot should be included
-  const shouldIncludeTimeSlot = (timeString) => {
-    const currentIST = getCurrentISTTime();
-    
-    const extractTime = (str) => {
-      const match = str.match(/(\d{1,2}):(\d{2})\s?([APap][Mm])?/);
-      if (!match) return { hour: 0, minute: 0, ampm: 'AM' };
-      
-      let hour = parseInt(match[1]);
-      const minute = parseInt(match[2]);
-      const ampm = match[3] ? match[3].toUpperCase() : 'AM';
-      
-      if (ampm === 'PM' && hour !== 12) hour += 12;
-      if (ampm === 'AM' && hour === 12) hour = 0;
-      
-      return { hour, minute, ampm };
+    const emotionFocus = {
+      joy: "Harness your joyful energy for productivity and connection",
+      sad: "Gentle self-care and comforting activities",
+      calm: "Maintain your peaceful state with balanced activities",
+      neutral: "Create structure while staying flexible",
+      fear: "Ground yourself with comforting routines",
+      anxious: "Reduce anxiety with predictable, calming activities"
     };
     
-    const slotTime = extractTime(timeString);
-    const currentTime = extractTime(currentIST);
-    
-    const slotMinutes = slotTime.hour * 60 + slotTime.minute;
-    const currentMinutes = currentTime.hour * 60 + currentTime.minute;
-    
-    return slotMinutes >= currentMinutes;
-  };
+    return `**${emotionTitles[emotionParam] || "Your Day Plan"}**
 
-  // Create default time slots starting from given time
-  const createDefaultTimeSlots = (startTime) => {
-    const slots = [];
-    let currentTime = startTime;
-    
-    const activities = [
-      { activity: "Plan Your Day", type: "work", desc: "Review your tasks and set priorities" },
-      { activity: "Deep Work Session", type: "work", desc: "Focus on important tasks without distractions" },
-      { activity: "Short Break", type: "break", desc: "Stretch and hydrate" },
-      { activity: "Creative Work", type: "work", desc: "Work on creative projects or learning" },
-      { activity: "Lunch Break", type: "food", desc: "Enjoy a nutritious meal away from work" },
-      { activity: "Afternoon Tasks", type: "work", desc: "Handle emails and administrative work" },
-      { activity: "Evening Walk", type: "exercise", desc: "Get some fresh air and light exercise" },
-      { activity: "Dinner", type: "food", desc: "Light, healthy dinner" },
-      { activity: "Relaxation Time", type: "break", desc: "Read, meditate, or enjoy a hobby" },
-      { activity: "Wind Down", type: "rest", desc: "Prepare for restful sleep" }
-    ];
-    
-    const incrementTime = (timeStr) => {
-      const match = timeStr.match(/(\d{1,2}):(\d{2})\s?([APap][Mm])/);
-      if (!match) return timeStr;
-      
-      let hour = parseInt(match[1]);
-      let minute = parseInt(match[2]);
-      let ampm = match[3].toUpperCase();
-      
-      minute += 30;
-      if (minute >= 60) {
-        hour += Math.floor(minute / 60);
-        minute = minute % 60;
-      }
-      
-      if (hour >= 12) {
-        if (hour > 12) hour -= 12;
-        if (ampm === 'AM' && hour === 12) ampm = 'PM';
-        else if (ampm === 'PM' && hour === 12) ampm = 'AM';
-      }
-      
-      const formattedMinute = minute.toString().padStart(2, '0');
-      return `${hour}:${formattedMinute} ${ampm}`;
-    };
-    
-    for (let i = 0; i < Math.min(8, activities.length); i++) {
-      const endTime = incrementTime(currentTime);
-      const timeRange = `${currentTime} - ${endTime}`;
-      
-      slots.push({
-        time: timeRange,
-        mainActivity: activities[i].activity,
-        description: activities[i].desc,
-        type: activities[i].type
-      });
-      
-      currentTime = incrementTime(endTime);
-    }
-    
-    return slots;
-  };
+**Focus:** ${emotionFocus[emotionParam] || "Creating a balanced and productive day"}
+
+${startTime} - 9:00 AM: Morning Planning. Review your tasks and set intentions for the day.
+9:00 AM - 10:30 AM: Focused Work Session. Tackle your most important project without distractions.
+10:30 AM - 11:00 AM: Break with Music. Listen to Kannada songs to uplift your mood.
+11:00 AM - 12:30 PM: Creative Tasks. Work on something that brings you joy or satisfaction.
+12:30 PM - 1:30 PM: Lunch Break. Enjoy a nutritious meal away from screens.
+1:30 PM - 3:00 PM: Learning Session. Study something new or develop a skill.
+3:00 PM - 3:30 PM: Afternoon Recharge. Take a short walk or do light stretching.
+3:30 PM - 5:00 PM: Final Tasks. Complete remaining work or personal projects.
+5:00 PM - 6:00 PM: Evening Relaxation. Listen to calming Kannada music.
+
+**Suggested Kannada Songs for ${emotionParam} mood:**
+1. "Baare Baare" by S. P. Balasubrahmanyam - For joyful energy
+2. "Kanne Kanne" from movie Kavacha - For emotional connection
+3. "Male Nintu" by Rajkumar - For calming reflection
+4. "Huttidare Kannada" by C. Ashwath - For patriotic upliftment
+
+Remember: This is your day. Adjust as needed and be kind to yourself.`;
+  }, []);
 
   // Fetch plan from API
   const fetchPlan = useCallback(async () => {
@@ -467,50 +510,7 @@ Now create a plan specifically for ${latestEmotion} emotion starting from ${next
     } finally {
       setLoading(false);
     }
-  }, [apiKey, loading, parsePlanResponse]);
-
-  // Create fallback plan
-  const createFallbackPlan = (emotion, startTime) => {
-    const emotionTitles = {
-      joy: "Joyful Day Plan",
-      sad: "Comforting Day Plan",
-      calm: "Peaceful Day Plan",
-      neutral: "Balanced Day Plan",
-      fear: "Grounding Day Plan",
-      anxious: "Calming Day Plan"
-    };
-    
-    const emotionFocus = {
-      joy: "Harness your joyful energy for productivity and connection",
-      sad: "Gentle self-care and comforting activities",
-      calm: "Maintain your peaceful state with balanced activities",
-      neutral: "Create structure while staying flexible",
-      fear: "Ground yourself with comforting routines",
-      anxious: "Reduce anxiety with predictable, calming activities"
-    };
-    
-    return `**${emotionTitles[emotion] || "Your Day Plan"}**
-
-**Focus:** ${emotionFocus[emotion] || "Creating a balanced and productive day"}
-
-${startTime} - 9:00 AM: Morning Planning. Review your tasks and set intentions for the day.
-9:00 AM - 10:30 AM: Focused Work Session. Tackle your most important project without distractions.
-10:30 AM - 11:00 AM: Break with Music. Listen to Kannada songs to uplift your mood.
-11:00 AM - 12:30 PM: Creative Tasks. Work on something that brings you joy or satisfaction.
-12:30 PM - 1:30 PM: Lunch Break. Enjoy a nutritious meal away from screens.
-1:30 PM - 3:00 PM: Learning Session. Study something new or develop a skill.
-3:00 PM - 3:30 PM: Afternoon Recharge. Take a short walk or do light stretching.
-3:30 PM - 5:00 PM: Final Tasks. Complete remaining work or personal projects.
-5:00 PM - 6:00 PM: Evening Relaxation. Listen to calming Kannada music.
-
-**Suggested Kannada Songs for ${emotion} mood:**
-1. "Baare Baare" by S. P. Balasubrahmanyam - For joyful energy
-2. "Kanne Kanne" from movie Kavacha - For emotional connection
-3. "Male Nintu" by Rajkumar - For calming reflection
-4. "Huttidare Kannada" by C. Ashwath - For patriotic upliftment
-
-Remember: This is your day. Adjust as needed and be kind to yourself.`;
-  };
+  }, [loading, apiKey, GEMINI_API_URL, getCurrentISTTime, getNextTimeSlot, createFallbackPlan, parsePlanResponse]);
 
   useEffect(() => {
     // Set current IST time
@@ -538,7 +538,7 @@ Remember: This is your day. Adjust as needed and be kind to yourself.`;
         console.error("Error parsing emotion:", err);
       }
     }
-  }, [parsePlanResponse]);
+  }, [parsePlanResponse, getCurrentISTTime]);
 
   // Emotion-based color scheme
   const getEmotionColors = () => {
@@ -778,7 +778,7 @@ Remember: This is your day. Adjust as needed and be kind to yourself.`;
                         style={{
                           width: "50px",
                           height: "50px",
-                          background: `linear-gradient(135deg, #FF0000, #FF3333)`,
+                          background: "linear-gradient(135deg, #FF0000, #FF3333)",
                           borderRadius: "12px",
                           display: "flex",
                           alignItems: "center",
