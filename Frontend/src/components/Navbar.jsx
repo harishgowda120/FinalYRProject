@@ -101,7 +101,7 @@ export default function Navbar() {
               }}
             />
           </span>
-          Day<span style={{color:"black"}}>PlannerAI</span>
+          Emoti<span style={{color:"black"}}>Plan</span>
         </Link>
 
         <button
@@ -465,3 +465,4 @@ export default function Navbar() {
     </nav>
   );
 }
+
